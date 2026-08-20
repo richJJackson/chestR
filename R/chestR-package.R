@@ -17,5 +17,8 @@
 #' @seealso [chestr()], [plot.chestr()], [grid_biom()]
 #' @importFrom stats dnorm sd update
 #' @importFrom survival Surv
+#' @importFrom ggplot2 ggplot aes geom_point geom_rug
+#'   scale_colour_distiller scale_size_identity theme_bw labs .data
+#' @importFrom scales squish
 #' @keywords internal
 "_PACKAGE"

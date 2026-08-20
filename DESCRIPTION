@@ -17,7 +17,8 @@ RoxygenNote: 7.3.3
 VignetteBuilder: knitr
 Imports:
     survival,
-    RColorBrewer
+    ggplot2,
+    scales
 Suggests:
     knitr,
     rmarkdown,

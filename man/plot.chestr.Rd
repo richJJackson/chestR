@@ -11,8 +11,7 @@
   pnt.scale = 3,
   col.scale = NULL,
   pts = TRUE,
-  data_cex = 0.45,
-  data_col = grDevices::rgb(0, 0, 0, 0.25),
+  data_cex = 0.6,
   reliable_only = TRUE,
   ...
 )
@@ -28,14 +27,12 @@ plot_chestr(x, ...)
 \item{pnt.scale}{Multiplier for point size (proportional to local information).
 If \code{NULL}, size is scaled automatically from grid size.}
 
-\item{col.scale}{Colour breaks: \code{NULL} (symmetric -3 to 3), \code{"obs"}
+\item{col.scale}{Colour limits: \code{NULL} (symmetric -3 to 3), \code{"obs"}
 (data-driven), or a length-2 numeric range \verb{(min, max)}.}
 
 \item{pts}{If \code{TRUE}, overlay observed biomarker values.}
 
 \item{data_cex}{Point size for observed biomarker data (when \code{pts = TRUE}).}
-
-\item{data_col}{Point colour for observed biomarker data.}
 
 \item{reliable_only}{If \code{TRUE} (default), only plot grid points that passed
 the events-per-df safeguard.}
@@ -43,12 +40,13 @@ the events-per-df safeguard.}
 \item{...}{Ignored (for S3 compatibility).}
 }
 \value{
-Invisibly returns \code{x}.
+The ggplot object (invisibly).
 }
 \description{
-Visualises a local coefficient stored in \code{\link[=chestr]{chestr()}} output. Point size
-reflects local information (effective events); colour reflects the selected
-coefficient. Model and biomarker data are taken from \code{x} itself.
+Visualises a local coefficient stored in \code{\link[=chestr]{chestr()}} output using
+\strong{ggplot2}. Point size reflects local information (effective events);
+colour reflects the selected coefficient. Model and biomarker data are
+taken from \code{x} itself.
 }
 \examples{
 \dontrun{

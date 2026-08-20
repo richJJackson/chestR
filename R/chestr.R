@@ -181,8 +181,8 @@ chestr_point <- function(base, biom, x, bw = NULL,
 
   weight <- chestr_weights(biom, x, method = method, kern.adj = kern.adj, bw = bw)
   events <- as.numeric(base$y[, 2])
-  eff.n <- sum(weight)
-  eff.e <- sum(events * weight)
+  eff.n <- sum(weight,na.rm=T)
+  eff.e <- sum(events * weight,na.rm=T)
   ess_events <- kish_ess(weight[events == 1])
   n_df <- length(stats::coef(base))
   events_per_df <- ess_events / n_df

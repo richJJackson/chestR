@@ -104,7 +104,8 @@ test_that("chestr_point returns skipped=TRUE below threshold", {
 
 test_that("plot.chestr uses stored base and biom", {
   skip_if_not_installed("survival")
-  skip_if_not_installed("RColorBrewer")
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("scales")
   set.seed(11)
   n <- 40
   dat <- data.frame(st = rexp(n, 0.2), trt = rbinom(n, 1, 0.5), b1 = rnorm(n))
@@ -113,7 +114,25 @@ test_that("plot.chestr uses stored base and biom", {
   cr <- chestr(base, dat$b1, grid.size = 3, min_events_per_df = 0)
   expect_s3_class(cr, "chestr")
   expect_false(inherits(cr, "data.frame"))
-  expect_silent(plot(cr, trt.param = "trt", pts = FALSE))
+  p <- plot(cr, trt.param = "trt", pts = FALSE)
+  expect_s3_class(p, "ggplot")
+})
+
+test_that("plot.chestr 2d returns ggplot", {
+  skip_if_not_installed("survival")
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("scales")
+  set.seed(12)
+  n <- 50
+  dat <- data.frame(
+    st = rexp(n, 0.2), trt = rbinom(n, 1, 0.5),
+    b1 = rnorm(n), b2 = rnorm(n)
+  )
+  dat$cen <- 1L
+  base <- survival::coxph(survival::Surv(st, cen) ~ trt, data = dat)
+  cr <- chestr(base, dat[, c("b1", "b2")], grid.size = 4, min_events_per_df = 0)
+  p <- plot(cr, trt.param = "trt", col.scale = c(-2, 2))
+  expect_s3_class(p, "ggplot")
 })
 
 test_that("as.data.frame.chestr returns estimates", {
