@@ -1,14 +1,12 @@
-#' Plot local treatment effects across biomarker space
+#' Plot local treatment effects from a `chestr` object
 #'
-#' Visualises a local coefficient from [chestr()] output over one or two
-#' biomarker dimensions. Point size reflects local information (effective
-#' events); colour reflects the magnitude of the selected coefficient.
+#' Visualises a local coefficient stored in [chestr()] output. Point size
+#' reflects local information (effective events); colour reflects the selected
+#' coefficient. Model and biomarker data are taken from `x` itself.
 #'
-#' @param cr.ob Output from [chestr()].
-#' @param trt.param Column name in `cr.ob` for the effect to colour points
-#'   (e.g. `"ArmGEM"` or `"as.factor.fluvacc.1"`).
-#' @param base The fitted `coxph` object passed to [chestr()].
-#' @param biom Biomarker values used in [chestr()].
+#' @param x An object of class `"chestr"` from [chestr()].
+#' @param trt.param Column name in `x$estimates` for the effect to colour
+#'   (e.g. `"trt"` or `"treat_fGEM"`).
 #' @param pnt.scale Multiplier for point size (proportional to local information).
 #'   If `NULL`, size is scaled automatically from grid size.
 #' @param col.scale Colour breaks: `NULL` (symmetric -3 to 3), `"obs"`
@@ -18,44 +16,47 @@
 #' @param data_col Point colour for observed biomarker data.
 #' @param reliable_only If `TRUE` (default), only plot grid points that passed
 #'   the events-per-df safeguard.
+#' @param ... Ignored (for S3 compatibility).
 #'
-#' @details
-#' Objects returned by [chestr()] have S3 class `"chestr"`, so
-#' `plot(cr, trt.param = ..., base = ..., biom = ...)` dispatches to the
-#' `plot` method. Direct calls to `plot.chestr()` or [plot_chestr()] are
-#' equivalent.
-#'
-#' @return Invisibly returns `cr.ob`.
+#' @return Invisibly returns `x`.
 #'
 #' @export
-#' @name plot_chestr
+#' @method plot chestr
 #'
 #' @examples
 #' \dontrun{
-#' plot_chestr(cr, trt.param = "trt", base = base, biom = biom)
+#' plot(cr, trt.param = "trt")
 #' }
 #'
 #' @seealso [chestr()]
-plot_chestr <- function(cr.ob, trt.param, base, biom,
+plot.chestr <- function(x, trt.param,
                         pnt.scale = 3, col.scale = NULL, pts = TRUE,
                         data_cex = 0.45,
                         data_col = grDevices::rgb(0, 0, 0, 0.25),
-                        reliable_only = TRUE) {
+                        reliable_only = TRUE,
+                        ...) {
+  if (!inherits(x, "chestr")) {
+    stop("x must be a 'chestr' object from chestr().", call. = FALSE)
+  }
   if (!requireNamespace("RColorBrewer", quietly = TRUE)) {
-    stop("Package 'RColorBrewer' is required for plot_chestr().", call. = FALSE)
+    stop("Package 'RColorBrewer' is required for plot.chestr().", call. = FALSE)
   }
 
-  biom <- as.data.frame(biom)
+  biom <- as.data.frame(x$biom)
+  base <- x$base
   n_biom <- ncol(biom)
   if (n_biom < 1L || n_biom > 2L) {
-    stop("plot_chestr() supports 1 or 2 biomarker dimensions.", call. = FALSE)
+    stop("plot.chestr() supports 1 or 2 biomarker dimensions.", call. = FALSE)
   }
 
-  if (!trt.param %in% names(cr.ob)) {
-    stop("trt.param '", trt.param, "' not found in chestr output.", call. = FALSE)
+  if (missing(trt.param) || is.null(trt.param)) {
+    stop("trt.param must be supplied (column name in x$estimates).", call. = FALSE)
+  }
+  if (!trt.param %in% names(x$estimates)) {
+    stop("trt.param '", trt.param, "' not found in x$estimates.", call. = FALSE)
   }
 
-  plot_df <- cr.ob
+  plot_df <- x$estimates
   if (isTRUE(reliable_only) && "reliable" %in% names(plot_df)) {
     plot_df <- plot_df[!is.na(plot_df$reliable) & plot_df$reliable, , drop = FALSE]
   }
@@ -119,17 +120,11 @@ plot_chestr <- function(cr.ob, trt.param, base, biom,
                      pch = 20, xpd = TRUE, bty = "n")
   }
 
-  invisible(cr.ob)
+  invisible(x)
 }
 
-
-#' @rdname plot_chestr
-#' @param x Output from [chestr()] (S3 class `"chestr"`).
-#' @param ... Additional arguments passed to [plot_chestr()]
-#'   (`trt.param`, `base`, `biom`, and plotting options).
-#' @method plot chestr
+#' @rdname plot.chestr
 #' @export
-#' @rawNamespace export(plot.chestr)
-plot.chestr <- function(x, ...) {
-  plot_chestr(x, ...)
+plot_chestr <- function(x, ...) {
+  plot.chestr(x, ...)
 }

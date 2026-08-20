@@ -41,9 +41,13 @@ the threshold are skipped (coefficients set to \code{NA}) and a warning is
 issued. Set to \code{0} or \code{NULL} to disable.}
 }
 \value{
-A data.frame with grid coordinates, coefficient estimates, standard
-errors (\verb{*.se} columns), \code{eff.n}, \code{eff.e}/\code{eff.event} (sum of event
-weights), \code{ess_events} (Kish ESS), \code{events_per_df}, and \code{reliable}.
+An object of class \code{"chestr"}: a list with
+\itemize{
+\item \code{estimates}: data.frame of grid coordinates, coefficients, SEs, ESS columns
+\item \code{base}: the fitted \code{coxph} model
+\item \code{biom}: biomarker data.frame used for weighting / plotting
+\item \code{method}, \code{kern.adj}, \code{grid.size}, \code{min_events_per_df}: fitting settings
+}
 }
 \description{
 Fits a weighted Cox model at each point on a biomarker grid. Observations
@@ -63,10 +67,11 @@ dat$status <- as.integer(dat$time < 5)
 dat$time[dat$status == 0L] <- 5
 base <- coxph(Surv(time, status) ~ trt, data = dat)
 cr <- chestr(base, dat$biom, grid.size = 5, min_events_per_df = 0)
-head(cr)
+head(cr$estimates)
+plot(cr, trt.param = "trt")
 }
 
 }
 \seealso{
-\code{\link[=chestr_point]{chestr_point()}}, \code{\link[=plot_chestr]{plot_chestr()}}, \code{\link[=grid_biom]{grid_biom()}}
+\code{\link[=chestr_point]{chestr_point()}}, \code{\link[=plot.chestr]{plot.chestr()}}, \code{\link[=grid_biom]{grid_biom()}}
 }

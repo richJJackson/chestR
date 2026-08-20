@@ -4,7 +4,7 @@ test_that("grid_biom returns expected dimensions", {
   expect_equal(names(g), c("x", "y"))
 })
 
-test_that("chestr returns coefficients and effective events", {
+test_that("chestr returns classed list with estimates, base, biom", {
   skip_if_not_installed("survival")
   set.seed(42)
   n <- 80
@@ -17,15 +17,21 @@ test_that("chestr returns coefficients and effective events", {
   dat$cen <- as.numeric(dat$st < 5)
   dat$st[dat$cen == 0] <- 5
   base <- survival::coxph(survival::Surv(st, cen) ~ trt, data = dat)
+  biom <- dat[, c("b1", "b2")]
   cr <- suppressWarnings(
-    chestr(base, dat[, c("b1", "b2")], grid.size = 5,
+    chestr(base, biom, grid.size = 5,
            method = "legacy", kern.adj = 2, min_events_per_df = 5)
   )
-  expect_true("trt" %in% names(cr))
-  expect_true("eff.event" %in% names(cr))
-  expect_true("ess_events" %in% names(cr))
-  expect_equal(nrow(cr), 25)
-  expect_true(any(grepl("\\.se$", names(cr))))
+  expect_s3_class(cr, "chestr")
+  expect_true(is.list(cr))
+  expect_true(all(c("estimates", "base", "biom") %in% names(cr)))
+  expect_identical(cr$base, base)
+  expect_equal(names(cr$biom), c("b1", "b2"))
+  expect_true("trt" %in% names(cr$estimates))
+  expect_true("eff.event" %in% names(cr$estimates))
+  expect_true("ess_events" %in% names(cr$estimates))
+  expect_equal(nrow(cr$estimates), 25)
+  expect_true(any(grepl("\\.se$", names(cr$estimates))))
 })
 
 test_that("chestr assigns default biomarker names for unnamed inputs", {
@@ -43,8 +49,9 @@ test_that("chestr assigns default biomarker names for unnamed inputs", {
   dimnames(b) <- NULL
   base <- survival::coxph(survival::Surv(st, cen) ~ x, data = dat)
   cr <- chestr(base, b, grid.size = 3, method = "legacy", min_events_per_df = 0)
-  expect_true(all(c("biom1", "biom2") %in% names(cr)))
-  expect_true("x" %in% names(cr))
+  expect_true(all(c("biom1", "biom2") %in% names(cr$estimates)))
+  expect_true(all(c("biom1", "biom2") %in% names(cr$biom)))
+  expect_true("x" %in% names(cr$estimates))
 })
 
 test_that("chestr skips grid points below min_events_per_df", {
@@ -66,12 +73,13 @@ test_that("chestr skips grid points below min_events_per_df", {
                  method = "legacy", kern.adj = 2, min_events_per_df = 20),
     "Skipped"
   )
-  expect_true("reliable" %in% names(cr))
-  expect_true("ess_events" %in% names(cr))
-  expect_true(any(cr$reliable))
-  expect_true(any(!cr$reliable))
-  expect_true(any(is.na(cr$trt[!cr$reliable])))
-  expect_true(all(is.finite(cr$trt[cr$reliable])))
+  est <- cr$estimates
+  expect_true("reliable" %in% names(est))
+  expect_true("ess_events" %in% names(est))
+  expect_true(any(est$reliable))
+  expect_true(any(!est$reliable))
+  expect_true(any(is.na(est$trt[!est$reliable])))
+  expect_true(all(is.finite(est$trt[est$reliable])))
 })
 
 test_that("chestr_point returns skipped=TRUE below threshold", {
@@ -94,14 +102,9 @@ test_that("chestr_point returns skipped=TRUE below threshold", {
   expect_null(res$fit)
 })
 
-
-test_that("plot.chestr is available as plot() method", {
-  expect_true(exists("plot.chestr", mode = "function"))
-  expect_equal(names(formals(plot.chestr)), c("x", "..."))
-})
-
-test_that("chestr output has S3 class chestr", {
+test_that("plot.chestr uses stored base and biom", {
   skip_if_not_installed("survival")
+  skip_if_not_installed("RColorBrewer")
   set.seed(11)
   n <- 40
   dat <- data.frame(st = rexp(n, 0.2), trt = rbinom(n, 1, 0.5), b1 = rnorm(n))
@@ -109,10 +112,11 @@ test_that("chestr output has S3 class chestr", {
   base <- survival::coxph(survival::Surv(st, cen) ~ trt, data = dat)
   cr <- chestr(base, dat$b1, grid.size = 3, min_events_per_df = 0)
   expect_s3_class(cr, "chestr")
-  expect_s3_class(cr, "data.frame")
+  expect_false(inherits(cr, "data.frame"))
+  expect_silent(plot(cr, trt.param = "trt", pts = FALSE))
 })
 
-test_that("distance method returns reliable ESS columns", {
+test_that("as.data.frame.chestr returns estimates", {
   skip_if_not_installed("survival")
   set.seed(3)
   n <- 50
@@ -126,6 +130,9 @@ test_that("distance method returns reliable ESS columns", {
   base <- survival::coxph(survival::Surv(st, cen) ~ trt, data = dat)
   cr <- chestr(base, dat$b1, grid.size = 5, method = "distance",
                min_events_per_df = 0)
-  expect_true(all(c("ess_events", "events_per_df", "reliable") %in% names(cr)))
-  expect_true(all(cr$reliable))
+  df <- as.data.frame(cr)
+  expect_s3_class(df, "data.frame")
+  expect_equal(nrow(df), nrow(cr$estimates))
+  expect_true(all(c("ess_events", "events_per_df", "reliable") %in% names(df)))
+  expect_true(all(df$reliable))
 })

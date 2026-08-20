@@ -21,9 +21,11 @@
 #'   the threshold are skipped (coefficients set to `NA`) and a warning is
 #'   issued. Set to `0` or `NULL` to disable.
 #'
-#' @return A data.frame with grid coordinates, coefficient estimates, standard
-#'   errors (`*.se` columns), `eff.n`, `eff.e`/`eff.event` (sum of event
-#'   weights), `ess_events` (Kish ESS), `events_per_df`, and `reliable`.
+#' @return An object of class `"chestr"`: a list with
+#'   * `estimates`: data.frame of grid coordinates, coefficients, SEs, ESS columns
+#'   * `base`: the fitted `coxph` model
+#'   * `biom`: biomarker data.frame used for weighting / plotting
+#'   * `method`, `kern.adj`, `grid.size`, `min_events_per_df`: fitting settings
 #'
 #' @export
 #'
@@ -40,10 +42,11 @@
 #' dat$time[dat$status == 0L] <- 5
 #' base <- coxph(Surv(time, status) ~ trt, data = dat)
 #' cr <- chestr(base, dat$biom, grid.size = 5, min_events_per_df = 0)
-#' head(cr)
+#' head(cr$estimates)
+#' plot(cr, trt.param = "trt")
 #' }
 #'
-#' @seealso [chestr_point()], [plot_chestr()], [grid_biom()]
+#' @seealso [chestr_point()], [plot.chestr()], [grid_biom()]
 chestr <- function(base, biom, grid.size = 25,
                    method = c("distance", "square_distance", "legacy"),
                    kern.adj = 4, bw = NULL,
@@ -113,14 +116,42 @@ chestr <- function(base, biom, grid.size = 25,
     se_mat[i, ] <- sc[term_names, 3]
   }
 
-  ret <- cbind(grid.xy, coef_mat, se_mat,
-               eff.n = eff.n, eff.e = eff.e, eff.event = eff.e,
-               ess_events = ess_events,
-               events_per_df = events_per_df,
-               reliable = !skipped)
-  rownames(ret) <- NULL
-  class(ret) <- c("chestr", class(ret))
-  ret
+  estimates <- cbind(grid.xy, coef_mat, se_mat,
+                     eff.n = eff.n, eff.e = eff.e, eff.event = eff.e,
+                     ess_events = ess_events,
+                     events_per_df = events_per_df,
+                     reliable = !skipped)
+  rownames(estimates) <- NULL
+
+  structure(
+    list(
+      estimates = estimates,
+      base = base,
+      biom = biom,
+      method = method,
+      kern.adj = kern.adj,
+      grid.size = grid.size,
+      min_events_per_df = min_events_per_df
+    ),
+    class = "chestr"
+  )
+}
+
+#' @export
+print.chestr <- function(x, ...) {
+  cat("chestr object\n")
+  cat("  biomarkers :", paste(names(x$biom), collapse = ", "), "\n")
+  cat("  method     :", x$method, "\n")
+  cat("  grid points:", nrow(x$estimates),
+      " (reliable ", sum(x$estimates$reliable, na.rm = TRUE), ")\n", sep = "")
+  cat("\nEstimates (head):\n")
+  print(utils::head(x$estimates), ...)
+  invisible(x)
+}
+
+#' @export
+as.data.frame.chestr <- function(x, row.names = NULL, optional = FALSE, ...) {
+  as.data.frame(x$estimates, row.names = row.names, optional = optional, ...)
 }
 
 #' Fit a weighted Cox model at a single grid point

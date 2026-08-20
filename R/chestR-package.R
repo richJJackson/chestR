@@ -12,9 +12,9 @@
 #'
 #' 1. Fit a global `coxph` model (`base`) including treatment and covariates.
 #' 2. Call [chestr()] with biomarker values to obtain local estimates on a grid.
-#' 3. Use [plot_chestr()] to visualise how a coefficient (e.g. treatment) varies.
+#' 3. Use [plot.chestr()] / `plot(cr, trt.param = ...)` to visualise a coefficient.
 #'
-#' @seealso [chestr()], [plot_chestr()], [grid_biom()]
+#' @seealso [chestr()], [plot.chestr()], [grid_biom()]
 #' @importFrom stats dnorm sd update
 #' @importFrom survival Surv
 #' @keywords internal
