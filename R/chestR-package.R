@@ -13,8 +13,10 @@
 #' 1. Fit a global `coxph` model (`base`) including treatment and covariates.
 #' 2. Call [chestr()] with biomarker values to obtain local estimates on a grid.
 #' 3. Use [plot.chestr()] / `plot(cr, trt.param = ...)` to visualise a coefficient.
+#' 4. Optionally call [chestr_test()] for a permutation global test of
+#'    treatment-effect heterogeneity.
 #'
-#' @seealso [chestr()], [plot.chestr()], [grid_biom()]
+#' @seealso [chestr()], [plot.chestr()], [chestr_test()], [grid_biom()]
 #' @importFrom stats dnorm sd update
 #' @importFrom survival Surv
 #' @importFrom ggplot2 ggplot aes geom_point geom_rug

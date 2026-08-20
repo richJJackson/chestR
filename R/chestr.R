@@ -21,10 +21,15 @@
 #'   the threshold are skipped (coefficients set to `NA`) and a warning is
 #'   issued. Set to `0` or `NULL` to disable.
 #'
+#' @param treat_term Optional name of the treatment coefficient to record on the
+#'   returned object (used as the default in [plot.chestr()] / [chestr_test()]).
+#'
 #' @return An object of class `"chestr"`: a list with
 #'   * `estimates`: data.frame of grid coordinates, coefficients, SEs, ESS columns
 #'   * `base`: the fitted `coxph` model
 #'   * `biom`: biomarker data.frame used for weighting / plotting
+#'   * `data`: analysis data recovered from `base` when available (for permutation tests)
+#'   * `treat_term`: optional treatment coefficient name
 #'   * `method`, `kern.adj`, `grid.size`, `min_events_per_df`: fitting settings
 #'
 #' @export
@@ -41,16 +46,18 @@
 #' dat$status <- as.integer(dat$time < 5)
 #' dat$time[dat$status == 0L] <- 5
 #' base <- coxph(Surv(time, status) ~ trt, data = dat)
-#' cr <- chestr(base, dat$biom, grid.size = 5, min_events_per_df = 0)
+#' cr <- chestr(base, dat$biom, grid.size = 5, min_events_per_df = 0,
+#'              treat_term = "trt")
 #' head(cr$estimates)
 #' plot(cr, trt.param = "trt")
 #' }
 #'
-#' @seealso [chestr_point()], [plot.chestr()], [grid_biom()]
+#' @seealso [chestr_point()], [plot.chestr()], [chestr_test()], [grid_biom()]
 chestr <- function(base, biom, grid.size = 25,
                    method = c("distance", "square_distance", "legacy"),
                    kern.adj = 4, bw = NULL,
-                   min_events_per_df = 10) {
+                   min_events_per_df = 10,
+                   treat_term = NULL) {
   method <- match.arg(method)
   biom <- standardise_biom_names(biom)
 
@@ -64,6 +71,10 @@ chestr <- function(base, biom, grid.size = 25,
   n_df <- length(stats::coef(base))
   if (n_df < 1L) {
     stop("base model has no estimated coefficients.", call. = FALSE)
+  }
+
+  if (!is.null(treat_term) && !treat_term %in% names(stats::coef(base))) {
+    stop("treat_term '", treat_term, "' not found in coef(base).", call. = FALSE)
   }
 
   grid.xy <- grid_biom(biom, grid.size = grid.size)
@@ -123,11 +134,15 @@ chestr <- function(base, biom, grid.size = 25,
                      reliable = !skipped)
   rownames(estimates) <- NULL
 
+  data_stored <- extract_base_data(base, n_biom = nrow(biom))
+
   structure(
     list(
       estimates = estimates,
       base = base,
       biom = biom,
+      data = data_stored,
+      treat_term = treat_term,
       method = method,
       kern.adj = kern.adj,
       grid.size = grid.size,
@@ -142,6 +157,10 @@ print.chestr <- function(x, ...) {
   cat("chestr object\n")
   cat("  biomarkers :", paste(names(x$biom), collapse = ", "), "\n")
   cat("  method     :", x$method, "\n")
+  if (!is.null(x$treat_term)) {
+    cat("  treat_term :", x$treat_term, "\n")
+  }
+  cat("  data stored:", if (!is.null(x$data)) "yes" else "no", "\n")
   cat("  grid points:", nrow(x$estimates),
       " (reliable ", sum(x$estimates$reliable, na.rm = TRUE), ")\n", sep = "")
   cat("\nEstimates (head):\n")

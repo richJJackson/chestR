@@ -11,7 +11,8 @@ chestr(
   method = c("distance", "square_distance", "legacy"),
   kern.adj = 4,
   bw = NULL,
-  min_events_per_df = 10
+  min_events_per_df = 10,
+  treat_term = NULL
 )
 }
 \arguments{
@@ -39,6 +40,9 @@ freedom required to fit a local model (default \code{10}). Effective events use
 Kish ESS among event weights: \verb{(sum w_e)^2 / sum(w_e^2)}. Grid points below
 the threshold are skipped (coefficients set to \code{NA}) and a warning is
 issued. Set to \code{0} or \code{NULL} to disable.}
+
+\item{treat_term}{Optional name of the treatment coefficient to record on the
+returned object (used as the default in \code{\link[=plot.chestr]{plot.chestr()}} / \code{\link[=chestr_test]{chestr_test()}}).}
 }
 \value{
 An object of class \code{"chestr"}: a list with
@@ -46,6 +50,8 @@ An object of class \code{"chestr"}: a list with
 \item \code{estimates}: data.frame of grid coordinates, coefficients, SEs, ESS columns
 \item \code{base}: the fitted \code{coxph} model
 \item \code{biom}: biomarker data.frame used for weighting / plotting
+\item \code{data}: analysis data recovered from \code{base} when available (for permutation tests)
+\item \code{treat_term}: optional treatment coefficient name
 \item \code{method}, \code{kern.adj}, \code{grid.size}, \code{min_events_per_df}: fitting settings
 }
 }
@@ -66,12 +72,13 @@ dat <- data.frame(
 dat$status <- as.integer(dat$time < 5)
 dat$time[dat$status == 0L] <- 5
 base <- coxph(Surv(time, status) ~ trt, data = dat)
-cr <- chestr(base, dat$biom, grid.size = 5, min_events_per_df = 0)
+cr <- chestr(base, dat$biom, grid.size = 5, min_events_per_df = 0,
+             treat_term = "trt")
 head(cr$estimates)
 plot(cr, trt.param = "trt")
 }
 
 }
 \seealso{
-\code{\link[=chestr_point]{chestr_point()}}, \code{\link[=plot.chestr]{plot.chestr()}}, \code{\link[=grid_biom]{grid_biom()}}
+\code{\link[=chestr_point]{chestr_point()}}, \code{\link[=plot.chestr]{plot.chestr()}}, \code{\link[=chestr_test]{chestr_test()}}, \code{\link[=grid_biom]{grid_biom()}}
 }

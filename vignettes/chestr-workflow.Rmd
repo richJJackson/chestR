@@ -91,14 +91,24 @@ plot(cr, trt.param = "trt", col.scale = "obs", reliable_only = TRUE)
 `plot.chestr()` takes everything it needs from `cr` (`base` and `biom` are not
 passed again). By default only reliable grid points are drawn.
 
-## Optional note on permutation inference
+## Permutation global test
 
-Pointwise local estimates from `chestr()` are descriptive. Formal inference for
-treatment-effect heterogeneity (e.g. global tests that the local treatment
-surface is flat) typically needs a permutation or bootstrap procedure that
-respects the trial randomisation and the kernel bandwidth. Those routines are
-outside the core package API illustrated here; see companion analysis scripts
-in the Weighted-Regression project for worked examples.
+Pointwise local estimates from `chestr()` are descriptive. Formal evidence that
+the local treatment surface is not flat can be assessed with
+`chestr_test()`, which permutes treatment labels and recomputes `T_L2` and
+`T_MAX` (see `chestr_statistics()`).
+
+```{r test, eval = FALSE}
+cr <- chestr(
+  base, biom,
+  grid.size = 8, method = "legacy", kern.adj = 2,
+  min_events_per_df = 5,
+  treat_term = "trt"
+)
+# data, treat_term, and fit settings come from cr:
+tst <- chestr_test(cr, B = 99, seed = 1)
+tst
+```
 
 ## Session info
 

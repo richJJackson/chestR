@@ -7,7 +7,7 @@
 \usage{
 \method{plot}{chestr}(
   x,
-  trt.param,
+  trt.param = NULL,
   pnt.scale = 3,
   col.scale = NULL,
   pts = TRUE,
@@ -21,8 +21,8 @@ plot_chestr(x, ...)
 \arguments{
 \item{x}{An object of class \code{"chestr"} from \code{\link[=chestr]{chestr()}}.}
 
-\item{trt.param}{Column name in \code{x$estimates} for the effect to colour
-(e.g. \code{"trt"} or \code{"treat_fGEM"}).}
+\item{trt.param}{Column name in \code{x$estimates} for the effect to colour.
+If \code{NULL}, uses \code{x$treat_term} when set / uniquely inferable.}
 
 \item{pnt.scale}{Multiplier for point size (proportional to local information).
 If \code{NULL}, size is scaled automatically from grid size.}

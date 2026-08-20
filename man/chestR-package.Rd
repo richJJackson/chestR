@@ -18,10 +18,12 @@ The main workflow is:
 \item Fit a global \code{coxph} model (\code{base}) including treatment and covariates.
 \item Call \code{\link[=chestr]{chestr()}} with biomarker values to obtain local estimates on a grid.
 \item Use \code{\link[=plot.chestr]{plot.chestr()}} / \code{plot(cr, trt.param = ...)} to visualise a coefficient.
+\item Optionally call \code{\link[=chestr_test]{chestr_test()}} for a permutation global test of
+treatment-effect heterogeneity.
 }
 }
 \seealso{
-\code{\link[=chestr]{chestr()}}, \code{\link[=plot.chestr]{plot.chestr()}}, \code{\link[=grid_biom]{grid_biom()}}
+\code{\link[=chestr]{chestr()}}, \code{\link[=plot.chestr]{plot.chestr()}}, \code{\link[=chestr_test]{chestr_test()}}, \code{\link[=grid_biom]{grid_biom()}}
 }
 \author{
 \strong{Maintainer}: Richard Jackson \email{richj23@liverpool.ac.uk}

@@ -6,8 +6,8 @@
 #' taken from `x` itself.
 #'
 #' @param x An object of class `"chestr"` from [chestr()].
-#' @param trt.param Column name in `x$estimates` for the effect to colour
-#'   (e.g. `"trt"` or `"treat_fGEM"`).
+#' @param trt.param Column name in `x$estimates` for the effect to colour.
+#'   If `NULL`, uses `x$treat_term` when set / uniquely inferable.
 #' @param pnt.scale Multiplier for point size (proportional to local information).
 #'   If `NULL`, size is scaled automatically from grid size.
 #' @param col.scale Colour limits: `NULL` (symmetric -3 to 3), `"obs"`
@@ -29,7 +29,7 @@
 #' }
 #'
 #' @seealso [chestr()]
-plot.chestr <- function(x, trt.param,
+plot.chestr <- function(x, trt.param = NULL,
                         pnt.scale = 3, col.scale = NULL, pts = TRUE,
                         data_cex = 0.6,
                         reliable_only = TRUE,
@@ -44,6 +44,14 @@ plot.chestr <- function(x, trt.param,
     stop("Package 'scales' is required for plot.chestr().", call. = FALSE)
   }
 
+  if (is.null(trt.param)) {
+    trt.param <- tryCatch(resolve_treat_term(x, NULL), error = function(e) NULL)
+  }
+  if (is.null(trt.param)) {
+    stop("trt.param must be supplied (or set treat_term in chestr()).",
+         call. = FALSE)
+  }
+
   biom <- as.data.frame(x$biom)
   base <- x$base
   n_biom <- ncol(biom)
@@ -51,9 +59,6 @@ plot.chestr <- function(x, trt.param,
     stop("plot.chestr() supports 1 or 2 biomarker dimensions.", call. = FALSE)
   }
 
-  if (missing(trt.param) || is.null(trt.param)) {
-    stop("trt.param must be supplied (column name in x$estimates).", call. = FALSE)
-  }
   if (!trt.param %in% names(x$estimates)) {
     stop("trt.param '", trt.param, "' not found in x$estimates.", call. = FALSE)
   }

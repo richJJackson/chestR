@@ -155,3 +155,57 @@ test_that("as.data.frame.chestr returns estimates", {
   expect_true(all(c("ess_events", "events_per_df", "reliable") %in% names(df)))
   expect_true(all(df$reliable))
 })
+
+test_that("chestr_statistics and chestr_test run", {
+  skip_if_not_installed("survival")
+  set.seed(21)
+  n <- 60
+  dat <- data.frame(
+    st = rexp(n, 0.2),
+    trt = rbinom(n, 1, 0.5),
+    b1 = rnorm(n),
+    b2 = rnorm(n)
+  )
+  dat$cen <- as.numeric(dat$st < 3)
+  dat$st[dat$cen == 0] <- 3
+  base <- survival::coxph(survival::Surv(st, cen) ~ trt, data = dat)
+  cr <- chestr(base, dat[, c("b1", "b2")], grid.size = 4,
+               min_events_per_df = 0, treat_term = "trt")
+  expect_equal(cr$treat_term, "trt")
+  expect_true(!is.null(cr$data))
+  st <- chestr_statistics(cr)
+  expect_true(is.finite(st$T_L2))
+  expect_true(is.finite(st$T_MAX))
+  expect_equal(st$treat_term, "trt")
+
+  tst <- suppressWarnings(
+    chestr_test(cr, B = 9, seed = 21, reliable_only = FALSE)
+  )
+  expect_s3_class(tst, "chestr_test")
+  expect_equal(tst$treat_var, "trt")
+  expect_true(tst$p_L2 >= 1 / (1 + tst$n_perm_used))
+  expect_true(tst$p_L2 <= 1)
+  expect_true(tst$p_MAX >= 1 / (1 + tst$n_perm_used))
+  expect_equal(length(tst$null_T_L2), tst$n_perm_used)
+})
+
+test_that("chestr_test infers factor treat_var", {
+  skip_if_not_installed("survival")
+  set.seed(22)
+  n <- 50
+  dat <- data.frame(
+    st = rexp(n, 0.2),
+    treat_f = factor(sample(c("A", "B"), n, replace = TRUE)),
+    b1 = rnorm(n)
+  )
+  dat$cen <- 1L
+  base <- survival::coxph(survival::Surv(st, cen) ~ treat_f, data = dat)
+  term <- grep("^treat_f", names(coef(base)), value = TRUE)[1]
+  cr <- chestr(base, dat$b1, grid.size = 4, min_events_per_df = 0,
+               treat_term = term)
+  tst <- suppressWarnings(
+    chestr_test(cr, B = 5, seed = 22, reliable_only = FALSE)
+  )
+  expect_equal(tst$treat_var, "treat_f")
+  expect_equal(tst$treat_term, term)
+})
