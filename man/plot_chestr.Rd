@@ -2,6 +2,7 @@
 % Please edit documentation in R/plot-chestr.R
 \name{plot_chestr}
 \alias{plot_chestr}
+\alias{plot.chestr}
 \title{Plot local treatment effects across biomarker space}
 \usage{
 plot_chestr(
@@ -11,8 +12,13 @@ plot_chestr(
   biom,
   pnt.scale = 3,
   col.scale = NULL,
-  pts = TRUE
+  pts = TRUE,
+  data_cex = 0.45,
+  data_col = grDevices::rgb(0, 0, 0, 0.25),
+  reliable_only = TRUE
 )
+
+\method{plot}{chestr}(x, ...)
 }
 \arguments{
 \item{cr.ob}{Output from \code{\link[=chestr]{chestr()}}.}
@@ -27,18 +33,36 @@ plot_chestr(
 \item{pnt.scale}{Multiplier for point size (proportional to local information).
 If \code{NULL}, size is scaled automatically from grid size.}
 
-\item{col.scale}{Colour breaks: \code{NULL} (symmetric -0.75 to 0.75), \code{"obs"}
+\item{col.scale}{Colour breaks: \code{NULL} (symmetric -3 to 3), \code{"obs"}
 (data-driven), or a length-2 numeric range \verb{(min, max)}.}
 
 \item{pts}{If \code{TRUE}, overlay observed biomarker values.}
+
+\item{data_cex}{Point size for observed biomarker data (when \code{pts = TRUE}).}
+
+\item{data_col}{Point colour for observed biomarker data.}
+
+\item{reliable_only}{If \code{TRUE} (default), only plot grid points that passed
+the events-per-df safeguard.}
+
+\item{x}{Output from \code{\link[=chestr]{chestr()}} (S3 class \code{"chestr"}).}
+
+\item{...}{Additional arguments passed to \code{\link[=plot_chestr]{plot_chestr()}}
+(\code{trt.param}, \code{base}, \code{biom}, and plotting options).}
 }
 \value{
-Invisibly returns \code{cr.ob} with a \code{ps} column added for point scaling.
+Invisibly returns \code{cr.ob}.
 }
 \description{
 Visualises a local coefficient from \code{\link[=chestr]{chestr()}} output over one or two
 biomarker dimensions. Point size reflects local information (effective
 events); colour reflects the magnitude of the selected coefficient.
+}
+\details{
+Objects returned by \code{\link[=chestr]{chestr()}} have S3 class \code{"chestr"}, so
+\code{plot(cr, trt.param = ..., base = ..., biom = ...)} dispatches to the
+\code{plot} method. Direct calls to \code{plot.chestr()} or \code{\link[=plot_chestr]{plot_chestr()}} are
+equivalent.
 }
 \examples{
 \dontrun{

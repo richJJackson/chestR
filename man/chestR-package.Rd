@@ -24,7 +24,7 @@ The main workflow is:
 \code{\link[=chestr]{chestr()}}, \code{\link[=plot_chestr]{plot_chestr()}}, \code{\link[=grid_biom]{grid_biom()}}
 }
 \author{
-\strong{Maintainer}: Richard Jackson \email{richard.jackson@leeds.ac.uk}
+\strong{Maintainer}: Richard Jackson \email{richj23@liverpool.ac.uk}
 
 Authors:
 \itemize{

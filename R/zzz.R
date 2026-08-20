@@ -1,5 +1,2 @@
-#' @keywords internal
-#' @noRd
-.onLoad <- function(libname, pkgname) {
-  assign("plot.chestr", plot_chestr, envir = asNamespace(pkgname))
-}
+# Package load hooks reserved for future use.
+# plot.chestr is exported as an alias of plot_chestr (see R/plot-chestr.R).

@@ -10,7 +10,8 @@ chestr(
   grid.size = 25,
   method = c("distance", "square_distance", "legacy"),
   kern.adj = 4,
-  bw = NULL
+  bw = NULL,
+  min_events_per_df = 10
 )
 }
 \arguments{
@@ -32,11 +33,17 @@ supported for \code{\link[=plot_chestr]{plot_chestr()}}).}
 give narrower kernels.}
 
 \item{bw}{Optional kernel standard deviation; reserved for future use.}
+
+\item{min_events_per_df}{Minimum Kish effective events per model degree of
+freedom required to fit a local model (default \code{10}). Effective events use
+Kish ESS among event weights: \verb{(sum w_e)^2 / sum(w_e^2)}. Grid points below
+the threshold are skipped (coefficients set to \code{NA}) and a warning is
+issued. Set to \code{0} or \code{NULL} to disable.}
 }
 \value{
 A data.frame with grid coordinates, coefficient estimates, standard
-errors (\verb{*.se} columns), \code{eff.n} (effective sample size), and \code{eff.e} /
-\code{eff.event} (effective weighted events).
+errors (\verb{*.se} columns), \code{eff.n}, \code{eff.e}/\code{eff.event} (sum of event
+weights), \code{ess_events} (Kish ESS), \code{events_per_df}, and \code{reliable}.
 }
 \description{
 Fits a weighted Cox model at each point on a biomarker grid. Observations
@@ -44,11 +51,19 @@ near the grid point receive higher weight, yielding local estimates of
 treatment and covariate effects.
 }
 \examples{
-\dontrun{
+\donttest{
 library(survival)
-data <- readRDS("path/to/data.rds")
-base <- coxph(Surv(time, status) ~ trt + cov1, data = data)
-cr <- chestr(base, data$biomarker, grid.size = 20)
+set.seed(1)
+n <- 60
+dat <- data.frame(
+  time = rexp(n, 0.1), status = 1L,
+  trt = rbinom(n, 1, 0.5), biom = rnorm(n)
+)
+dat$status <- as.integer(dat$time < 5)
+dat$time[dat$status == 0L] <- 5
+base <- coxph(Surv(time, status) ~ trt, data = dat)
+cr <- chestr(base, dat$biom, grid.size = 5, min_events_per_df = 0)
+head(cr)
 }
 
 }

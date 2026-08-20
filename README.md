@@ -31,10 +31,11 @@ cr <- chestr(base, mydata$biomarker, grid.size = 25)
 # Visualise local treatment effect (2 biomarkers)
 plot_chestr(cr, trt.param = "treatment", base = base, biom = mydata[, c("biom1", "biom2")])
 
-# After library(chestR), plot.chestr() is also available as a backward-compatible alias
+# plot(cr, ...) also works (S3 class "chestr"); plot.chestr() is the same method
 ```
 
-See `inst/examples/simulation.R` for a self-contained simulation example.
+See `vignette("chestr-workflow", package = "chestR")` after install,
+or `inst/examples/simulation.R` for a longer simulation script.
 
 ## Development
 

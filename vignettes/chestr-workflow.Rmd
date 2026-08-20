@@ -1,0 +1,110 @@
+---
+title: "chestR workflow: global Cox to local biomarker maps"
+author: "Richard Jackson"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{chestR workflow: global Cox to local biomarker maps}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 4.5
+)
+```
+
+## Overview
+
+**chestR** re-fits a Cox model at each point on a biomarker grid using kernel
+weights. Local coefficients show how treatment (and other) effects vary across
+biomarker space. The usual workflow is:
+
+1. Fit a global Cox model.
+2. Call `chestr()` on biomarker values.
+3. Visualise a coefficient with `plot_chestr()` (alias `plot.chestr()`).
+
+This vignette uses a small simulated survival dataset so it builds without
+external files.
+
+## Simulate data and fit a global Cox model
+
+```{r simulate}
+library(survival)
+library(chestR)
+
+set.seed(20250806)
+n <- 120
+dat <- data.frame(
+  trt = rbinom(n, 1, 0.5),
+  cov = rnorm(n),
+  biom1 = rnorm(n),
+  biom2 = rnorm(n)
+)
+
+# Mild treatment-effect modification near the origin of biomarker space
+lp <- 0.2 * dat$cov +
+  log(0.7) * dat$trt *
+  exp(-0.5 * (dat$biom1^2 + dat$biom2^2))
+dat$time <- rexp(n, rate = exp(lp))
+dat$status <- as.integer(dat$time < 4)
+dat$time[dat$status == 0L] <- 4
+
+base <- coxph(Surv(time, status) ~ trt + cov, data = dat)
+summary(base)$coefficients
+```
+
+## Local estimates with `chestr()`
+
+```{r chestr}
+biom <- dat[, c("biom1", "biom2")]
+cr <- chestr(
+  base,
+  biom,
+  grid.size = 8,
+  method = "legacy",
+  kern.adj = 2,
+  min_events_per_df = 5
+)
+
+head(cr[, c("biom1", "biom2", "trt", "ess_events", "events_per_df", "reliable")])
+```
+
+Columns of interest include local coefficients (e.g. `trt`), Kish ESS among
+events (`ess_events`), events per model df (`events_per_df`), and `reliable`
+(whether the point passed the ESS safeguard).
+
+## Plot local treatment effects
+
+```{r plot}
+plot_chestr(
+  cr,
+  trt.param = "trt",
+  base = base,
+  biom = biom,
+  col.scale = "obs",
+  reliable_only = TRUE
+)
+```
+
+By default only reliable grid points are drawn. Set `reliable_only = FALSE` to
+include skipped locations (coefficients remain `NA` and are not plotted).
+
+## Optional note on permutation inference
+
+Pointwise local estimates from `chestr()` are descriptive. Formal inference for
+treatment-effect heterogeneity (e.g. global tests that the local treatment
+surface is flat) typically needs a permutation or bootstrap procedure that
+respects the trial randomisation and the kernel bandwidth. Those routines are
+outside the core package API illustrated here; see companion analysis scripts
+in the Weighted-Regression project for worked examples.
+
+## Session info
+
+```{r session}
+sessionInfo()
+```

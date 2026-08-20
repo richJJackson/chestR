@@ -10,7 +10,9 @@ chestr_point(
   x,
   bw = NULL,
   method = c("distance", "square_distance", "legacy"),
-  kern.adj = 4
+  kern.adj = 4,
+  min_events_per_df = 10,
+  warn = TRUE
 )
 }
 \arguments{
@@ -32,12 +34,25 @@ supported for \code{\link[=plot_chestr]{plot_chestr()}}).}
 
 \item{kern.adj}{Bandwidth divisor when \code{method = "legacy"}. Larger values
 give narrower kernels.}
+
+\item{min_events_per_df}{Minimum Kish effective events per model degree of
+freedom required to fit a local model (default \code{10}). Effective events use
+Kish ESS among event weights: \verb{(sum w_e)^2 / sum(w_e^2)}. Grid points below
+the threshold are skipped (coefficients set to \code{NA}) and a warning is
+issued. Set to \code{0} or \code{NULL} to disable.}
+
+\item{warn}{If \code{TRUE}, warn when the events-per-df safeguard skips the fit.}
 }
 \value{
-An updated \code{coxph} object fitted with kernel weights at \code{x}.
+A list with:
+\itemize{
+\item \code{fit}: fitted \code{coxph} object, or \code{NULL} if skipped
+\item \code{eff.n}, \code{eff.e}, \code{ess_events}, \code{events_per_df}
+\item \code{skipped}: logical
+}
 }
 \description{
-Internal workhorse for \code{\link[=chestr]{chestr()}}. Exported for advanced use (e.g. evaluating
+Workhorse for \code{\link[=chestr]{chestr()}}. Exported for advanced use (e.g. evaluating
 a single biomarker profile).
 }
 \seealso{

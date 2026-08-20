@@ -5,3 +5,5 @@
 ^\.github$
 ^\.git$
 ^\.gitignore$
+^CRAN_CHECKLIST\.md$
+^cran-comments\.md$
