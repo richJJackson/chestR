@@ -21,16 +21,17 @@ plot_chestr(x, ...)
 \arguments{
 \item{x}{An object of class \code{"chestr"} from \code{\link[=chestr]{chestr()}}.}
 
-\item{trt.param}{Column name in \code{x$estimates} for the effect to colour.
-If \code{NULL}, uses \code{x$treat_term} when set / uniquely inferable.}
+\item{trt.param}{Column name in \code{x$estimates} for the effect to colour
+(2D) or plot as a hazard-ratio curve (1D). If \code{NULL}, uses
+\code{x$treat_term} when set / uniquely inferable.}
 
 \item{pnt.scale}{Multiplier for point size (proportional to local information).
-If \code{NULL}, size is scaled automatically from grid size.}
+If \code{NULL}, size is scaled automatically from grid size. Used for 2D plots.}
 
-\item{col.scale}{Colour limits: \code{NULL} (symmetric -3 to 3), \code{"obs"}
-(data-driven), or a length-2 numeric range \verb{(min, max)}.}
+\item{col.scale}{Colour limits for 2D plots: \code{NULL} (symmetric -3 to 3),
+\code{"obs"} (data-driven), or a length-2 numeric range \verb{(min, max)}.}
 
-\item{pts}{If \code{TRUE}, overlay observed biomarker values.}
+\item{pts}{If \code{TRUE}, overlay observed biomarker values (2D points or 1D rug).}
 
 \item{data_cex}{Point size for observed biomarker data (when \code{pts = TRUE}).}
 
@@ -44,9 +45,11 @@ The ggplot object (invisibly).
 }
 \description{
 Visualises a local coefficient stored in \code{\link[=chestr]{chestr()}} output using
-\strong{ggplot2}. Point size reflects local information (effective events);
-colour reflects the selected coefficient. Model and biomarker data are
-taken from \code{x} itself.
+\strong{ggplot2}. For two biomarkers, a coloured grid of local log-hazard
+ratios is shown (point size reflects local information). For a single
+biomarker, a line of local hazard ratios is shown with a dashed
+horizontal reference at the global hazard ratio from \code{x$base}. Model and
+biomarker data are taken from \code{x} itself.
 }
 \examples{
 \dontrun{

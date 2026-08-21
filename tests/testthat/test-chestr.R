@@ -116,6 +116,9 @@ test_that("plot.chestr uses stored base and biom", {
   expect_false(inherits(cr, "data.frame"))
   p <- plot(cr, trt.param = "trt", pts = FALSE)
   expect_s3_class(p, "ggplot")
+  geoms <- vapply(p$layers, function(l) class(l$geom)[1], character(1))
+  expect_true("GeomLine" %in% geoms)
+  expect_true("GeomHline" %in% geoms)
 })
 
 test_that("plot.chestr 2d returns ggplot", {

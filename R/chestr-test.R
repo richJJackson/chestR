@@ -119,7 +119,7 @@ chestr_statistics <- function(x, treat_term = NULL, reliable_only = TRUE) {
 #' @export
 #' @seealso [chestr_statistics()], [chestr()]
 chestr_test <- function(x, treat_term = NULL, data = NULL, treat_var = NULL,
-                        B = 199, seed = NULL, reliable_only = TRUE) {
+                        B = 100, seed = NULL, reliable_only = TRUE) {
   if (!inherits(x, "chestr")) {
     stop("x must be a 'chestr' object from chestr().", call. = FALSE)
   }
