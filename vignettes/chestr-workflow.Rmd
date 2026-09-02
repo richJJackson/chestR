@@ -26,8 +26,8 @@ biomarker space. The usual workflow is:
 
 1. Fit a global Cox model.
 2. Call `chestr()` on biomarker values.
-3. Visualise a coefficient with `plot_chestr()` (alias `plot.chestr()`).
-
+3. Visualise a coefficient with `plot()` / `plot.chestr()`.
+4. Optionally run `chestr_test()` for a permutation global test.
 This vignette uses a small simulated survival dataset so it builds without
 external files.
 
@@ -96,7 +96,7 @@ passed again). By default only reliable grid points are drawn.
 Pointwise local estimates from `chestr()` are descriptive. Formal evidence that
 the local treatment surface is not flat can be assessed with
 `chestr_test()`, which permutes treatment labels and recomputes `T_L2` and
-`T_MAX` (see `chestr_statistics()`).
+`T_MAX`.
 
 ```{r test, eval = FALSE}
 cr <- chestr(

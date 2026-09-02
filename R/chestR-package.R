@@ -16,7 +16,7 @@
 #' 4. Optionally call [chestr_test()] for a permutation global test of
 #'    treatment-effect heterogeneity.
 #'
-#' @seealso [chestr()], [plot.chestr()], [chestr_test()], [grid_biom()]
+#' @seealso [chestr()], [plot.chestr()], [chestr_test()]
 #' @importFrom stats dnorm sd update
 #' @importFrom survival Surv
 #' @importFrom ggplot2 ggplot aes geom_point geom_rug

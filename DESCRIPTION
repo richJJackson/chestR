@@ -25,3 +25,4 @@ Suggests:
     mvtnorm,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+Language: en-GB

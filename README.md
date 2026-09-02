@@ -26,12 +26,14 @@ library(chestR)
 base <- coxph(Surv(time, status) ~ treatment + covariate, data = mydata)
 
 # Local estimates over a biomarker grid
-cr <- chestr(base, mydata$biomarker, grid.size = 25)
+cr <- chestr(base, mydata[, c("biom1", "biom2")], grid.size = 25,
+             treat_term = "treatment")
 
-# Visualise local treatment effect (2 biomarkers)
-plot_chestr(cr, trt.param = "treatment", base = base, biom = mydata[, c("biom1", "biom2")])
+# Visualise local treatment effect
+plot(cr, trt.param = "treatment")
 
-# plot(cr, ...) also works (S3 class "chestr"); plot.chestr() is the same method
+# Optional permutation test of constant treatment effect
+# tst <- chestr_test(cr, B = 99, seed = 1)
 ```
 
 See `vignette("chestr-workflow", package = "chestR")` after install,

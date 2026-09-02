@@ -19,7 +19,7 @@ chestr(
 \item{base}{A fitted \code{coxph} object (the global model).}
 
 \item{biom}{Biomarker values: a vector, matrix, or data.frame (1--2 columns
-supported for \code{\link[=plot_chestr]{plot_chestr()}}).}
+supported for \code{\link[=plot.chestr]{plot.chestr()}}).}
 
 \item{grid.size}{Number of grid points per biomarker dimension.}
 
@@ -80,5 +80,5 @@ plot(cr, trt.param = "trt")
 
 }
 \seealso{
-\code{\link[=chestr_point]{chestr_point()}}, \code{\link[=plot.chestr]{plot.chestr()}}, \code{\link[=chestr_test]{chestr_test()}}, \code{\link[=grid_biom]{grid_biom()}}
+\code{\link[=plot.chestr]{plot.chestr()}}, \code{\link[=chestr_test]{chestr_test()}}
 }

@@ -1,19 +1,26 @@
 ## Test environments
 
-* Local: macOS (darwin), R 4.4.2 — `testthat::test_local()` and
-  `R CMD check --no-manual --as-cran` during package prep.
+* Local: macOS (darwin / aarch64), R 4.4.2 —
+  `devtools::check(cran = TRUE)` and `R CMD check --as-cran` on
+  `chestR_0.1.0.tar.gz` (2026-08-21).
 * Not yet: win-builder, R-hub, or full multi-OS CRAN checks.
 
 ## R CMD check results
 
-On the prep machine: **0 ERRORS, 0 WARNINGS**, with expected NOTES only:
+**0 ERRORS, 0 WARNINGS, 2 NOTES**
 
-* CRAN incoming feasibility: New submission.
-* Future file timestamps: unable to verify current time (offline/clock check).
+NOTES:
+
+* `checking CRAN incoming feasibility ... NOTE`
+  New submission (expected for a first CRAN upload).
+
+* `checking for future file timestamps ... NOTE`
+  `unable to verify current time`
+  (common local/network clock-server check; not a package defect)
 
 Vignette `chestr-workflow` builds from simulated data only.
-A full CRAN-style check must still be re-run on a release tarball before
-submission (see `CRAN_CHECKLIST.md`).
+Unit tests: 47 passed.
+Spell check: clean (`Language: en-GB`, `inst/WORDLIST`).
 
 ## Downstream dependencies
 

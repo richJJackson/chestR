@@ -7,3 +7,6 @@
 ^\.gitignore$
 ^CRAN_CHECKLIST\.md$
 ^cran-comments\.md$
+^doc$
+^Meta$
+^CRAN-SUBMISSION$

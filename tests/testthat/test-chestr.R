@@ -1,5 +1,5 @@
 test_that("grid_biom returns expected dimensions", {
-  g <- grid_biom(data.frame(x = 1:5, y = 11:15), grid.size = 4)
+  g <- chestR:::grid_biom(data.frame(x = 1:5, y = 11:15), grid.size = 4)
   expect_equal(nrow(g), 16)
   expect_equal(names(g), c("x", "y"))
 })
@@ -95,8 +95,8 @@ test_that("chestr_point returns skipped=TRUE below threshold", {
   dat$st[dat$cen == 0] <- 2
   base <- survival::coxph(survival::Surv(st, cen) ~ trt, data = dat)
   res <- suppressWarnings(
-    chestr_point(base, dat["b1"], x = max(dat$b1) + 5,
-                 method = "legacy", kern.adj = 10, min_events_per_df = 10)
+    chestR:::chestr_point(base, dat["b1"], x = max(dat$b1) + 5,
+                          method = "legacy", kern.adj = 10, min_events_per_df = 10)
   )
   expect_true(res$skipped)
   expect_null(res$fit)
@@ -176,7 +176,7 @@ test_that("chestr_statistics and chestr_test run", {
                min_events_per_df = 0, treat_term = "trt")
   expect_equal(cr$treat_term, "trt")
   expect_true(!is.null(cr$data))
-  st <- chestr_statistics(cr)
+  st <- chestR:::chestr_statistics(cr)
   expect_true(is.finite(st$T_L2))
   expect_true(is.finite(st$T_MAX))
   expect_equal(st$treat_term, "trt")

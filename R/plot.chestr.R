@@ -31,7 +31,7 @@
 #' plot(cr, trt.param = "trt")
 #' }
 #'
-#' @seealso [chestr()]
+#' @seealso [chestr()], [chestr_test()]
 plot.chestr <- function(x, trt.param = NULL,
                         pnt.scale = 3, col.scale = NULL, pts = TRUE,
                         data_cex = 0.6,
@@ -180,10 +180,4 @@ plot.chestr <- function(x, trt.param = NULL,
 
   print(p)
   invisible(p)
-}
-
-#' @rdname plot.chestr
-#' @export
-plot_chestr <- function(x, ...) {
-  plot.chestr(x, ...)
 }

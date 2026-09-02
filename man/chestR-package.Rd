@@ -23,7 +23,7 @@ treatment-effect heterogeneity.
 }
 }
 \seealso{
-\code{\link[=chestr]{chestr()}}, \code{\link[=plot.chestr]{plot.chestr()}}, \code{\link[=chestr_test]{chestr_test()}}, \code{\link[=grid_biom]{grid_biom()}}
+\code{\link[=chestr]{chestr()}}, \code{\link[=plot.chestr]{plot.chestr()}}, \code{\link[=chestr_test]{chestr_test()}}
 }
 \author{
 \strong{Maintainer}: Richard Jackson \email{richj23@liverpool.ac.uk}

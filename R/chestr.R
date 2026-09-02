@@ -6,7 +6,7 @@
 #'
 #' @param base A fitted `coxph` object (the global model).
 #' @param biom Biomarker values: a vector, matrix, or data.frame (1--2 columns
-#'   supported for [plot_chestr()]).
+#'   supported for [plot.chestr()]).
 #' @param grid.size Number of grid points per biomarker dimension.
 #' @param method Weighting scheme:
 #'   * `"distance"` (default): scaled biomarkers + Gaussian kernel.
@@ -20,7 +20,6 @@
 #'   Kish ESS among event weights: `(sum w_e)^2 / sum(w_e^2)`. Grid points below
 #'   the threshold are skipped (coefficients set to `NA`) and a warning is
 #'   issued. Set to `0` or `NULL` to disable.
-#'
 #' @param treat_term Optional name of the treatment coefficient to record on the
 #'   returned object (used as the default in [plot.chestr()] / [chestr_test()]).
 #'
@@ -52,7 +51,7 @@
 #' plot(cr, trt.param = "trt")
 #' }
 #'
-#' @seealso [chestr_point()], [plot.chestr()], [chestr_test()], [grid_biom()]
+#' @seealso [plot.chestr()], [chestr_test()]
 chestr <- function(base, biom, grid.size = 25,
                    method = c("distance", "square_distance", "legacy"),
                    kern.adj = 4, bw = NULL,
@@ -150,136 +149,4 @@ chestr <- function(base, biom, grid.size = 25,
     ),
     class = "chestr"
   )
-}
-
-#' @export
-print.chestr <- function(x, ...) {
-  cat("chestr object\n")
-  cat("  biomarkers :", paste(names(x$biom), collapse = ", "), "\n")
-  cat("  method     :", x$method, "\n")
-  if (!is.null(x$treat_term)) {
-    cat("  treat_term :", x$treat_term, "\n")
-  }
-  cat("  data stored:", if (!is.null(x$data)) "yes" else "no", "\n")
-  cat("  grid points:", nrow(x$estimates),
-      " (reliable ", sum(x$estimates$reliable, na.rm = TRUE), ")\n", sep = "")
-  cat("\nEstimates (head):\n")
-  print(utils::head(x$estimates), ...)
-  invisible(x)
-}
-
-#' @export
-as.data.frame.chestr <- function(x, row.names = NULL, optional = FALSE, ...) {
-  as.data.frame(x$estimates, row.names = row.names, optional = optional, ...)
-}
-
-#' Fit a weighted Cox model at a single grid point
-#'
-#' Workhorse for [chestr()]. Exported for advanced use (e.g. evaluating
-#' a single biomarker profile).
-#'
-#' @inheritParams chestr
-#' @param x Numeric vector giving a single grid point (one value per biomarker).
-#' @param warn If `TRUE`, warn when the events-per-df safeguard skips the fit.
-#'
-#' @return A list with:
-#'   * `fit`: fitted `coxph` object, or `NULL` if skipped
-#'   * `eff.n`, `eff.e`, `ess_events`, `events_per_df`
-#'   * `skipped`: logical
-#'
-#' @export
-#' @seealso [chestr()]
-chestr_point <- function(base, biom, x, bw = NULL,
-                         method = c("distance", "square_distance", "legacy"),
-                         kern.adj = 4,
-                         min_events_per_df = 10,
-                         warn = TRUE) {
-  method <- match.arg(method)
-  biom <- as.data.frame(biom)
-  x <- as.numeric(x)
-
-  weight <- chestr_weights(biom, x, method = method, kern.adj = kern.adj, bw = bw)
-  events <- as.numeric(base$y[, 2])
-  eff.n <- sum(weight,na.rm=T)
-  eff.e <- sum(events * weight,na.rm=T)
-  ess_events <- kish_ess(weight[events == 1])
-  n_df <- length(stats::coef(base))
-  events_per_df <- ess_events / n_df
-
-  thr <- if (is.null(min_events_per_df)) 0 else min_events_per_df
-  if (events_per_df < thr) {
-    if (isTRUE(warn)) {
-      warning(
-        "Skipping local fit: Kish effective events/df = ",
-        signif(events_per_df, 3), " < ", thr,
-        " (Kish ESS events = ", signif(ess_events, 3),
-        ", df = ", n_df, ").",
-        call. = FALSE
-      )
-    }
-    return(list(
-      fit = NULL,
-      eff.n = eff.n,
-      eff.e = eff.e,
-      ess_events = ess_events,
-      events_per_df = events_per_df,
-      skipped = TRUE
-    ))
-  }
-
-  fit <- update_coxph_weights(base, weight + 1e-5)
-  list(
-    fit = fit,
-    eff.n = eff.n,
-    eff.e = eff.e,
-    ess_events = ess_events,
-    events_per_df = events_per_df,
-    skipped = FALSE
-  )
-}
-
-#' Kish effective sample size for a weight vector
-#' @keywords internal
-#' @noRd
-kish_ess <- function(w) {
-  w <- w[is.finite(w) & w > 0]
-  if (length(w) == 0L) return(0)
-  sum(w)^2 / sum(w^2)
-}
-
-#' Compute kernel weights for a single grid point
-#' @keywords internal
-#' @noRd
-chestr_weights <- function(biom, x,
-                           method = c("distance", "square_distance", "legacy"),
-                           kern.adj = 4, bw = NULL) {
-  method <- match.arg(method)
-  biom <- as.data.frame(biom)
-  x <- as.numeric(x)
-
-  if (method == "legacy") {
-    dist <- euc.dist(biom, x)
-    kern.sd <- if (!is.null(bw)) {
-      bw
-    } else {
-      mean(vapply(seq_len(ncol(biom)), function(j) {
-        stats::sd(biom[[j]], na.rm = TRUE)
-      }, numeric(1)), na.rm = TRUE) / kern.adj
-    }
-    weight <- stats::dnorm(dist, 0, kern.sd) / stats::dnorm(0, 0, kern.sd)
-  } else {
-    sbiom <- scale(biom)
-    center <- attr(sbiom, "scaled:center")
-    scale_fac <- attr(sbiom, "scaled:scale")
-    x_scaled <- (x - center) / scale_fac
-    sbiom <- as.data.frame(sbiom)
-    dist <- euc.dist(sbiom, x_scaled)
-
-    weight <- if (method == "square_distance") {
-      1 / pmax(dist^2, .Machine$double.eps)
-    } else {
-      stats::dnorm(dist, 0, 1)
-    }
-  }
-  weight
 }
