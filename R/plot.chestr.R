@@ -27,7 +27,7 @@
 #' @method plot chestr
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' plot(cr, trt.param = "trt")
 #' }
 #'

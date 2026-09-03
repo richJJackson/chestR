@@ -9,7 +9,11 @@ Authors@R: c(
 Description: Explores treatment effect heterogeneity and candidate predictive
     biomarkers by re-fitting weighted Cox proportional hazards models on a
     biomarker grid. Kernel weights centred at each grid point produce local
-    coefficient estimates that can be visualised across biomarker space.
+    coefficient estimates that can be visualised across biomarker space.  
+    Builds on ideas related to graphical Cox treatment-covariate interaction 
+    methods [see Bonetti and Gelber (2004) <doi:10.1093/biostatistics/kxh002> and
+    local partial-likelihood approaches Fan, Lin and Zhou (2006)
+    <doi:10.1214/009053605000000796>];
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

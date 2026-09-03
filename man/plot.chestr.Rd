@@ -49,7 +49,7 @@ horizontal reference at the global hazard ratio from \code{x$base}. Model and
 biomarker data are taken from \code{x} itself.
 }
 \examples{
-\dontrun{
+\donttest{
 plot(cr, trt.param = "trt")
 }
 
