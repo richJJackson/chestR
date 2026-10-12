@@ -10,7 +10,7 @@
   pnt.scale = 3,
   col.scale = NULL,
   pts = TRUE,
-  data_cex = 0.6,
+  data_cex = 1.6,
   reliable_only = TRUE,
   ...
 )
@@ -25,12 +25,17 @@
 \item{pnt.scale}{Multiplier for point size (proportional to local information).
 If \code{NULL}, size is scaled automatically from grid size. Used for 2D plots.}
 
-\item{col.scale}{Colour limits for 2D plots: \code{NULL} (symmetric -3 to 3),
-\code{"obs"} (data-driven), or a length-2 numeric range \verb{(min, max)}.}
+\item{col.scale}{Colour limits for 2D plots. \code{NULL} (default) uses a
+symmetric window around the unweighted \code{trt.param} coefficient from
+\code{x$base}, wide enough to cover -1 and 1, so white is the legend
+midpoint. \code{"obs"} uses the range of the plotted local estimates. A
+length-2 numeric vector sets \verb{(min, max)} directly. Whenever that
+coefficient lies inside the limits, it is drawn as white.}
 
 \item{pts}{If \code{TRUE}, overlay observed biomarker values (2D points or 1D rug).}
 
-\item{data_cex}{Point size for observed biomarker data (when \code{pts = TRUE}).}
+\item{data_cex}{Point size for observed biomarker data (when \code{pts = TRUE}).
+On a 2D surface these are black points with a white outline.}
 
 \item{reliable_only}{If \code{TRUE} (default), only plot grid points that passed
 the events-per-df safeguard.}
@@ -43,13 +48,30 @@ The ggplot object (invisibly).
 \description{
 Visualises a local coefficient stored in \code{\link[=chestr]{chestr()}} output using
 \strong{ggplot2}. For two biomarkers, a coloured grid of local log-hazard
-ratios is shown (point size reflects local information). For a single
+ratios is shown (point size reflects local information), with observed
+patients overlaid as small black points with a white outline when
+\code{pts = TRUE}. The default colour scale is blue–white–red and centred on
+the unweighted treatment coefficient from \code{x$base}, so white is that
+coefficient and colour is the deviation around it. For a single
 biomarker, a line of local hazard ratios is shown with a dashed
 horizontal reference at the global hazard ratio from \code{x$base}. Model and
 biomarker data are taken from \code{x} itself.
 }
 \examples{
 \donttest{
+library(survival)
+set.seed(1)
+n <- 60
+dat <- data.frame(
+  time = rexp(n, 0.1), status = 1L,
+  trt = rbinom(n, 1, 0.5), biom = rnorm(n)
+)
+dat$status <- as.integer(dat$time < 5)
+dat$time[dat$status == 0L] <- 5
+base <- coxph(Surv(time, status) ~ trt, data = dat)
+cr <- chestr(base, dat$biom, grid.size = 5, min_events_per_df = 0,
+             treat_term = "trt")
+head(cr$estimates)
 plot(cr, trt.param = "trt")
 }
 

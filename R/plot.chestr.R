@@ -2,10 +2,14 @@
 #'
 #' Visualises a local coefficient stored in [chestr()] output using
 #' **ggplot2**. For two biomarkers, a coloured grid of local log-hazard
-#' ratios is shown (point size reflects local information). For a single
-#' biomarker, a line of local hazard ratios is shown with a dashed
-#' horizontal reference at the global hazard ratio from `x$base`. Model and
-#' biomarker data are taken from `x` itself.
+#' ratios is shown (point size reflects local information), with observed
+#' patients overlaid as small black points with a white outline when
+#' `pts = TRUE`. The default colour scale is blue–white–red and centred on
+#' the unweighted treatment coefficient from `x$base`, so white is that
+#' coefficient and colour is the deviation around it. For a single
+#' biomarker, a line of local hazard
+#' ratios is shown with a dashed horizontal reference at the global hazard
+#' ratio from `x$base`. Model and biomarker data are taken from `x` itself.
 #'
 #' @param x An object of class `"chestr"` from [chestr()].
 #' @param trt.param Column name in `x$estimates` for the effect to colour
@@ -13,10 +17,15 @@
 #'   `x$treat_term` when set / uniquely inferable.
 #' @param pnt.scale Multiplier for point size (proportional to local information).
 #'   If `NULL`, size is scaled automatically from grid size. Used for 2D plots.
-#' @param col.scale Colour limits for 2D plots: `NULL` (symmetric -3 to 3),
-#'   `"obs"` (data-driven), or a length-2 numeric range `(min, max)`.
+#' @param col.scale Colour limits for 2D plots. `NULL` (default) uses a
+#'   symmetric window around the unweighted `trt.param` coefficient from
+#'   `x$base`, wide enough to cover -1 and 1, so white is the legend
+#'   midpoint. `"obs"` uses the range of the plotted local estimates. A
+#'   length-2 numeric vector sets `(min, max)` directly. Whenever that
+#'   coefficient lies inside the limits, it is drawn as white.
 #' @param pts If `TRUE`, overlay observed biomarker values (2D points or 1D rug).
 #' @param data_cex Point size for observed biomarker data (when `pts = TRUE`).
+#'   On a 2D surface these are black points with a white outline.
 #' @param reliable_only If `TRUE` (default), only plot grid points that passed
 #'   the events-per-df safeguard.
 #' @param ... Ignored (for S3 compatibility).
@@ -28,13 +37,26 @@
 #'
 #' @examples
 #' \donttest{
+#' library(survival)
+#' set.seed(1)
+#' n <- 60
+#' dat <- data.frame(
+#'   time = rexp(n, 0.1), status = 1L,
+#'   trt = rbinom(n, 1, 0.5), biom = rnorm(n)
+#' )
+#' dat$status <- as.integer(dat$time < 5)
+#' dat$time[dat$status == 0L] <- 5
+#' base <- coxph(Surv(time, status) ~ trt, data = dat)
+#' cr <- chestr(base, dat$biom, grid.size = 5, min_events_per_df = 0,
+#'              treat_term = "trt")
+#' head(cr$estimates)
 #' plot(cr, trt.param = "trt")
 #' }
 #'
 #' @seealso [chestr()], [chestr_test()]
 plot.chestr <- function(x, trt.param = NULL,
                         pnt.scale = 3, col.scale = NULL, pts = TRUE,
-                        data_cex = 0.6,
+                        data_cex = 1.6,
                         reliable_only = TRUE,
                         ...) {
   if (!inherits(x, "chestr")) {
@@ -85,6 +107,7 @@ plot.chestr <- function(x, trt.param = NULL,
   }
 
   out <- plot_df[[trt.param]]
+  beta_global <- suppressWarnings(unname(stats::coef(base)[trt.param]))
   if (identical(col.scale, "obs")) {
     col.lim.lo <- min(out)
     col.lim.hi <- max(out)
@@ -95,10 +118,29 @@ plot.chestr <- function(x, trt.param = NULL,
     col.lim.lo <- col.scale[1]
     col.lim.hi <- col.scale[2]
   } else if (is.null(col.scale)) {
-    col.lim.lo <- -3
-    col.lim.hi <- 3
+    # Symmetric about the unweighted coefficient, and wide enough to
+    # include -1 and 1, so white sits at that coefficient.
+    if (!is.finite(beta_global)) {
+      if (n_biom == 1L) {
+        col.lim.lo <- -1
+        col.lim.hi <- 1
+      } else {
+        stop("Global coefficient for '", trt.param, "' is not available.",
+             call. = FALSE)
+      }
+    } else {
+      half <- max(abs(beta_global + 1), abs(beta_global - 1))
+      col.lim.lo <- beta_global - half
+      col.lim.hi <- beta_global + half
+    }
   } else {
     stop("col.scale must be NULL, 'obs', or a length-2 numeric vector.", call. = FALSE)
+  }
+  if (is.finite(beta_global) &&
+      beta_global >= col.lim.lo && beta_global <= col.lim.hi) {
+    col_mid <- beta_global
+  } else {
+    col_mid <- (col.lim.lo + col.lim.hi) / 2
   }
 
   xvar <- names(biom)[1]
@@ -119,21 +161,37 @@ plot.chestr <- function(x, trt.param = NULL,
         ggplot2::geom_point(
           data = biom,
           ggplot2::aes(.data[[xvar]], .data[[yvar]]),
-          size = data_cex, colour = "grey40", alpha = 0.8
+          shape = 21, size = data_cex, stroke = 0.35,
+          fill = "black", colour = "white"
         )
     }
     p <- p +
-      ggplot2::scale_colour_distiller(
-        palette = "RdBu",
+      ggplot2::scale_colour_gradient2(
+        low = "#2166AC",
+        mid = "white",
+        high = "#B2182B",
+        midpoint = col_mid,
         limits = c(col.lim.lo, col.lim.hi),
+        breaks = if (is.null(col.scale)) {
+          c(col.lim.lo, col_mid, col.lim.hi)
+        } else {
+          ggplot2::waiver()
+        },
+        labels = if (is.null(col.scale)) {
+          function(br) sprintf("%.3f", br)
+        } else {
+          ggplot2::waiver()
+        },
         oob = scales::squish,
         name = trt.param
       ) +
       ggplot2::scale_size_identity() +
-      ggplot2::theme_bw()
+      ggplot2::theme_bw() +
+      ggplot2::theme(
+        panel.background = ggplot2::element_rect(fill = "grey92")
+      )
   } else {
     plot_df <- plot_df[order(plot_df[[xvar]]), , drop = FALSE]
-    beta_global <- unname(stats::coef(base)[trt.param])
     if (!is.finite(beta_global)) {
       stop("Global coefficient for '", trt.param, "' is not available.",
            call. = FALSE)
